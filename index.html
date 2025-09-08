@@ -132,8 +132,17 @@
                 if (!/^-?\d+$/.test(rawKey)) throw new Error(`Invalid point key "${rawKey}". Point keys must be integer strings like "1","2",...`);
                 const x = BigInt(rawKey);
                 const entry = data[rawKey];
-                if (!entry || typeof entry.value !== 'string' || typeof entry.base === 'undefined') throw new Error(`Invalid point entry for key ${rawKey}. Must be object with 'value' (string) and 'base'.`);
-                const y = parseBigIntFromString(entry.value, parseInt(entry.base, 10));
+                if (!entry || typeof entry.base === 'undefined') throw new Error(`Invalid point entry for key ${rawKey}. Must be object with 'value' and 'base'.`);
+                const rawValue = entry.value;
+                let valueStr;
+                if (typeof rawValue === 'string') {
+                    valueStr = rawValue;
+                } else if (typeof rawValue === 'number' || typeof rawValue === 'bigint' || typeof rawValue === 'boolean') {
+                    valueStr = String(rawValue);
+                } else {
+                    throw new Error(`Invalid type for 'value' at key ${rawKey}: expected string, number, bigint or boolean.`);
+                }
+                const y = parseBigIntFromString(valueStr, parseInt(entry.base, 10));
                 pts.push({ x, y });
             }
             if (pts.length < k) throw new Error(`Not enough data points: keys.k = ${k}, but only found ${pts.length} points.`);
