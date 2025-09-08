@@ -42,4 +42,4 @@ Run the following command:
 
 node solve.js
 
-The script will automatically process both testcase1.json and testcase2.json and print their respective constant terms to the console.
+The script will reads the json input from both testcase1.json and testcase2.json and print their respective constant terms to the console.
