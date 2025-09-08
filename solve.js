@@ -1,5 +1,11 @@
 const fs = require('fs');
 
+/**
+ * Parses a string representation of a number in a given base into a BigInt.
+ * @param {string} stringValue - The string to parse.
+ * @param {number} base - The numerical base.
+ * @returns {BigInt} The resulting BigInt.
+ */
 function parseBigInt(stringValue, base) {
     const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
     let result = 0n;
@@ -14,6 +20,11 @@ function parseBigInt(stringValue, base) {
     return result;
 }
 
+/**
+ * Calculates the polynomial's constant term from a JSON file.
+ * @param {string} filePath - The path to the input JSON file.
+ * @returns {BigInt} The calculated constant term.
+ */
 function findConstantTerm(filePath) {
     const jsonString = fs.readFileSync(filePath, 'utf8');
     const data = JSON.parse(jsonString);
@@ -58,20 +69,17 @@ function findConstantTerm(filePath) {
     return constantTerm;
 }
 
-const filePath = process.argv[2];
 
-if (!filePath) {
-    console.error("Error: Please provide the path to your JSON input file.");
-    console.log("Usage: node solve.js <path-to-file.json>");
-    process.exit(1); 
-}
 
 try {
+    console.log("Output for Test Case 1:");
+    const result1 = findConstantTerm('testcase1.json');
+    console.log(result1.toString());
 
-    const result = findConstantTerm(filePath);
-    console.log(result.toString());
+    console.log("\nOutput for Test Case 2:");
+    const result2 = findConstantTerm('testcase2.json');
+    console.log(result2.toString());
 } catch (error) {
-
     console.error(`An error occurred: ${error.message}`);
     process.exit(1);
 }
