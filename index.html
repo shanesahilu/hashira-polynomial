@@ -1,117 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Polynomial Constant Term Finder</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
+    <style>body{font-family:'Inter',sans-serif;}</style>
 </head>
 <body class="bg-white text-gray-900 min-h-screen flex items-center justify-center p-4">
-
     <div class="w-full max-w-2xl bg-gray-50 rounded-xl shadow-2xl p-8 space-y-6 border border-gray-200">
-        
-        <!-- Header Section -->
         <div>
             <h1 class="text-3xl font-bold text-center text-cyan-600">Polynomial Constant Term Finder</h1>
-            <p class="text-center text-gray-600 mt-2">
-                Calculates the constant term 'c' of a polynomial using Lagrange Interpolation.
-            </p>
+            <p class="text-center text-gray-600 mt-2">Calculates the constant term 'c' of a polynomial using Lagrange Interpolation.</p>
         </div>
 
-        <!-- Option 1: Run Pre-defined Test Cases -->
         <div class="bg-gray-100 p-6 rounded-lg">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">1. Run Pre-defined Test Cases</h2>
-            <p class="text-sm text-gray-600 mb-4">
-                Click a button to run the calculation on a test file located in the project directory.
-            </p>
+            <p class="text-sm text-gray-600 mb-4">Click a button to run the calculation on a test file located in the project directory.</p>
             <div class="flex flex-col sm:flex-row gap-4">
-                <button id="testCase1Btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
-                    Run Test Case 1
-                </button>
-                <button id="testCase2Btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
-                    Run Test Case 2
-                </button>
+                <button id="testCase1Btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">Run Test Case 1</button>
+                <button id="testCase2Btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105">Run Test Case 2</button>
             </div>
         </div>
 
-        <!-- Option 2: Upload Your Own File -->
         <div class="bg-gray-100 p-6 rounded-lg">
             <h2 class="text-xl font-semibold mb-4 text-gray-800">2. Upload a JSON File</h2>
-            <p class="text-sm text-gray-600 mb-4">
-                Select a JSON file from your computer to get the constant term.
-            </p>
+            <p class="text-sm text-gray-600 mb-4">Select a JSON file from your computer to get the constant term.</p>
             <label for="fileInput" class="w-full cursor-pointer bg-violet-600 hover:bg-violet-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                 <span>Upload File</span>
             </label>
-            <input id="fileInput" type="file" accept=".json" class="hidden">
+            <input id="fileInput" type="file" accept=".json" class="hidden" />
         </div>
 
-        <!-- Output Section -->
         <div>
             <h3 class="text-lg font-semibold text-gray-700 mb-2">Result:</h3>
-            <div id="output" class="bg-gray-100 border border-gray-300 rounded-lg p-4 min-h-[80px] text-lg font-mono whitespace-pre-wrap break-words text-green-600">
-                Awaiting input...
-            </div>
+            <div id="output" class="bg-gray-100 border border-gray-300 rounded-lg p-4 min-h-[80px] text-lg font-mono whitespace-pre-wrap break-words text-green-600">Awaiting input...</div>
         </div>
     </div>
 
     <script>
-        // --- DOM Element References ---
         const testCase1Btn = document.getElementById('testCase1Btn');
         const testCase2Btn = document.getElementById('testCase2Btn');
         const fileInput = document.getElementById('fileInput');
         const outputDiv = document.getElementById('output');
 
-        // --- Core Logic ---
-
-        /**
-         * Parses a string representation of a number in a given base into a BigInt.
-         */
-        function parseBigInt(stringValue, base) {
-            const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
-            let result = 0n;
-            const baseBigInt = BigInt(base);
-            for (const char of stringValue) {
-                const digitValue = DIGITS.indexOf(char.toLowerCase());
-                if (digitValue === -1 || digitValue >= base) {
-                    throw new Error(`Invalid character '${char}' for base ${base}`);
-                }
-                result = result * baseBigInt + BigInt(digitValue);
+        function bigIntGcd(a, b) {
+            a = a < 0n ? -a : a;
+            b = b < 0n ? -b : b;
+            while (b !== 0n) {
+                const t = a % b;
+                a = b;
+                b = t;
             }
-            return result;
+            return a;
         }
 
-        /**
-         * Calculates the polynomial's constant term from a parsed JSON object.
-         */
-        function findConstantTerm(data) {
-            const k = data.keys.k;
+        function reduceFraction(num, den) {
+            if (den === 0n) throw new Error('Zero denominator in fraction reduction.');
+            if (den < 0n) { num = -num; den = -den; }
+            const g = bigIntGcd(num < 0n ? -num : num, den);
+            return [num / g, den / g];
+        }
 
-            const allPoints = [];
-            for (const key in data) {
-                if (key !== 'keys') {
-                    const x = BigInt(key);
-                    const rootData = data[key];
-                    const y = parseBigInt(rootData.value, parseInt(rootData.base, 10));
-                    allPoints.push({ x, y });
-                }
+        const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
+        const DIGIT_MAP = new Map(Array.from(DIGITS).map((c, i) => [c, i]));
+
+        function parseBigIntFromString(valueString, base) {
+            if (typeof valueString !== 'string') throw new Error('Value must be a string.');
+            base = Number(base);
+            if (!Number.isInteger(base) || base < 2 || base > 36) throw new Error(`Invalid base ${base}. Supported bases are integers between 2 and 36.`);
+            let s = valueString.trim();
+            if (s.length === 0) throw new Error('Empty value string');
+            let sign = 1n;
+            if (s[0] === '+' || s[0] === '-') {
+                if (s[0] === '-') sign = -1n;
+                s = s.slice(1);
+                if (s.length === 0) throw new Error('Invalid numeric string: only sign found.');
             }
-
-            allPoints.sort((a, b) => (a.x < b.x ? -1 : 1));
-            
-            const selectedPoints = allPoints.slice(0, k);
-            if (selectedPoints.length < k) {
-                throw new Error(`Not enough points in data. Need ${k}, but found ${selectedPoints.length}.`);
+            s = s.replace(/_/g, '');
+            if (s.length === 0) throw new Error('Invalid numeric string after removing separators.');
+            let result = 0n;
+            const baseBig = BigInt(base);
+            for (const ch of s) {
+                const cl = ch.toLowerCase();
+                const digit = DIGIT_MAP.has(cl) ? DIGIT_MAP.get(cl) : -1;
+                if (digit === -1 || digit >= base) throw new Error(`Invalid character '${ch}' for base ${base} in value "${valueString}".`);
+                result = result * baseBig + BigInt(digit);
             }
+            return sign * result;
+        }
 
-            let constantTerm = 0n;
+        function computeConstantTermFromSelected(selectedPoints, k) {
+            if (!Array.isArray(selectedPoints)) throw new Error('selectedPoints must be an array.');
+            if (!Number.isInteger(k) || k <= 0) throw new Error('k must be positive integer.');
+            if (selectedPoints.length < k) throw new Error(`Need at least k=${k} points; got ${selectedPoints.length}.`);
+            let totalNum = 0n;
+            let totalDen = 1n;
             for (let j = 0; j < k; j++) {
                 const xj = selectedPoints[j].x;
                 const yj = selectedPoints[j].y;
@@ -120,18 +106,45 @@
                 for (let i = 0; i < k; i++) {
                     if (i === j) continue;
                     const xi = selectedPoints[i].x;
+                    if (xi === xj) throw new Error(`Duplicate x value found among selected points: x = ${xi.toString()}.`);
                     numerator *= (0n - xi);
                     denominator *= (xj - xi);
                 }
-                const term = (yj * numerator) / denominator;
-                constantTerm += term;
+                let termNum = yj * numerator;
+                let termDen = denominator;
+                [termNum, termDen] = reduceFraction(termNum, termDen);
+                const newNum = totalNum * termDen + termNum * totalDen;
+                const newDen = totalDen * termDen;
+                [totalNum, totalDen] = reduceFraction(newNum, newDen);
             }
-            return constantTerm;
+            if (totalDen === 0n) throw new Error('Final denominator is zero (unexpected).');
+            return reduceFraction(totalNum, totalDen);
         }
-        
-        /**
-         * Updates the output display with a result or an error message.
-         */
+
+        function findConstantTermFromData(data) {
+            if (data === null || typeof data !== 'object' || Array.isArray(data)) throw new Error('Input JSON must be an object.');
+            if (!data.keys || typeof data.keys.k === 'undefined') throw new Error('Missing "keys.k" in JSON input.');
+            const k = Number(data.keys.k);
+            if (!Number.isInteger(k) || k <= 0) throw new Error(`Invalid keys.k: expected positive integer, got ${data.keys.k}`);
+            const pts = [];
+            for (const rawKey of Object.keys(data)) {
+                if (rawKey === 'keys') continue;
+                if (!/^-?\d+$/.test(rawKey)) throw new Error(`Invalid point key "${rawKey}". Point keys must be integer strings like "1","2",...`);
+                const x = BigInt(rawKey);
+                const entry = data[rawKey];
+                if (!entry || typeof entry.value !== 'string' || typeof entry.base === 'undefined') throw new Error(`Invalid point entry for key ${rawKey}. Must be object with 'value' (string) and 'base'.`);
+                const y = parseBigIntFromString(entry.value, parseInt(entry.base, 10));
+                pts.push({ x, y });
+            }
+            if (pts.length < k) throw new Error(`Not enough data points: keys.k = ${k}, but only found ${pts.length} points.`);
+            pts.sort((a, b) => { if (a.x < b.x) return -1; if (a.x > b.x) return 1; return 0; });
+            const selected = pts.slice(0, k);
+            for (let i = 1; i < selected.length; i++) {
+                if (selected[i].x === selected[i - 1].x) throw new Error(`Duplicate x values among selected points: ${selected[i].x.toString()}`);
+            }
+            return computeConstantTermFromSelected(selected, k);
+        }
+
         function updateOutput(message, isError = false) {
             outputDiv.textContent = message;
             if (isError) {
@@ -143,62 +156,43 @@
             }
         }
 
-        // --- Event Handlers ---
-
-        /**
-         * Handles clicks on the test case buttons by fetching the local JSON file.
-         */
         async function handleTestCase(fileName) {
             updateOutput(`Fetching ${fileName} and calculating...`);
             try {
                 const response = await fetch(fileName);
-                if (!response.ok) {
-                    throw new Error(`Could not find ${fileName}. Make sure it's in the same directory.`);
-                }
+                if (!response.ok) throw new Error(`Could not find ${fileName}. Make sure it's in the same directory.`);
                 const data = await response.json();
-                const result = findConstantTerm(data);
-                updateOutput(result.toString());
+                const [num, den] = findConstantTermFromData(data);
+                if (den === 1n) updateOutput(num.toString()); else updateOutput(`${num.toString()}/${den.toString()}`);
             } catch (error) {
                 updateOutput(`Error: ${error.message}`, true);
             }
         }
 
-        /**
-         * Handles the file upload event.
-         */
         function handleFileUpload(event) {
             const file = event.target.files[0];
-            if (!file) {
-                return;
-            }
-
+            if (!file) return;
             updateOutput(`Reading ${file.name}...`);
             const reader = new FileReader();
-
             reader.onload = (e) => {
                 try {
                     const fileContent = e.target.result;
                     const data = JSON.parse(fileContent);
-                    const result = findConstantTerm(data);
-                    updateOutput(result.toString());
+                    const [num, den] = findConstantTermFromData(data);
+                    if (den === 1n) updateOutput(num.toString()); else updateOutput(`${num.toString()}/${den.toString()}`);
                 } catch (error) {
                     updateOutput(`Error processing file: ${error.message}`, true);
                 }
             };
-            
             reader.onerror = () => {
-                 updateOutput(`Error reading file: ${reader.error}`, true);
+                updateOutput(`Error reading file: ${reader.error}`, true);
             };
-
             reader.readAsText(file);
         }
 
-        // --- Attach Event Listeners ---
         testCase1Btn.addEventListener('click', () => handleTestCase('testcase1.json'));
         testCase2Btn.addEventListener('click', () => handleTestCase('testcase2.json'));
         fileInput.addEventListener('change', handleFileUpload);
-
     </script>
 </body>
 </html>
-
